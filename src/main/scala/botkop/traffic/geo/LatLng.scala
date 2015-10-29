@@ -18,4 +18,6 @@ case class LatLng(lat: Double, lng: Double) {
         EarthRadiusMeters * c
     }
 
+    def toJson: String = s"""{"lat":$lat,"lng":$lng}"""
+
 }
