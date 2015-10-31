@@ -1,34 +1,33 @@
 package botkop.traffic
 
-import akka.actor.{Props, ActorRef, Actor}
-import botkop.traffic.messaging.kafka.StringMessenger
+import akka.actor.{Actor, Props}
+import botkop.traffic.geo.LatLng
+import botkop.traffic.messaging.Messenger
 import com.typesafe.scalalogging.LazyLogging
-import scala.concurrent.duration._
+
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 
 
 class Vehicle(id: String,
-              sender: StringMessenger,
+              messenger: Messenger[VehicleLocation],
               velocity: Double,
               duration: FiniteDuration = 1.second)
     extends Actor with LazyLogging {
 
     var route: Route = _
-    // var simulator: ActorRef = _
 
     override def receive = {
 
         case r: Route =>
             this.route = r
-            // this.simulator = sender()
             self ! 0.0
 
         case currentDistance: Double =>
             val position = route.position(currentDistance)
-            // simulator ! position
 
-            // sender.send("vehicle-location-topic", s"{id:$id,position:${position.toJson}}")
-            sender.send("vehicle-location-topic", position.toJson, id)
+            val vl = VehicleLocation(id, position)
+            messenger.send("vehicle-location-topic", id, vl)
 
             logger.info(s"distance covered: $currentDistance")
             val newDistance: Double = currentDistance + (velocity * (duration.toMillis / 1000.0))
@@ -41,8 +40,12 @@ class Vehicle(id: String,
 object Vehicle {
     def props(
              id: String,
-             sender: StringMessenger,
+             messenger: Messenger[VehicleLocation],
              velocity: Double,
              duration: FiniteDuration = 1.second): Props =
-        Props(new Vehicle(id, sender, velocity, duration))
+        Props(new Vehicle(id, messenger, velocity, duration))
+}
+
+case class VehicleLocation(id: String, position: LatLng) {
+    def toJson = s"""{"id":"$id","position":${position.toJson}}"""
 }

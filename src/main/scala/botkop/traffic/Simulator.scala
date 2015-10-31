@@ -10,9 +10,6 @@ object Simulator extends App with LazyLogging {
     val system = ActorSystem("SimulatorSystem")
     val myActor = system.actorOf(Props[Vehicle], name = "vehicle1")
 
-    myActor ! "hello"
-    myActor ! "move"
-
     system.awaitTermination()
 
 
