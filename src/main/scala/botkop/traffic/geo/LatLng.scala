@@ -21,3 +21,7 @@ case class LatLng(lat: Double, lng: Double) {
     def toJson: String = s"""{"lat":$lat,"lng":$lng}"""
 
 }
+
+object LatLng {
+    def apply(): LatLng = LatLng(0.0, 0.0)
+}

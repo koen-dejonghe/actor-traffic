@@ -7,7 +7,6 @@ import akka.actor.ActorRef
 import net.liftweb.json.DefaultFormats
 import net.liftweb.json.Serialization.write
 
-
 /*
 send vehicle location both to kafka and to an actor
  */
@@ -30,11 +29,13 @@ case class LocationMessenger(
     }
 
     override def send(key: String, vl: LocationMessage): Unit = {
-        // val data = new KeyedMessage[String, String](topic, key, vl.toJson)
-
         implicit val formats = DefaultFormats
-        val json = write(vl)
-        val data = new KeyedMessage[String, String](topic, key, json)
+        val json: String = write(vl)
+        val data =
+            if (key == null)
+                new KeyedMessage[String, String](topic, key, json)
+            else
+                new KeyedMessage[String, String](topic, json)
         producer.send(data)
 
         locationCollector ! vl

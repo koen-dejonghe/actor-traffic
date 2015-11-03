@@ -6,13 +6,13 @@ import botkop.traffic.messaging.{LocationMessage, CelltowerLocationMessage, Vehi
 import com.typesafe.scalalogging.LazyLogging
 
 
-case class CelltowerSupervisor(mcc: Int, mnc: Int, messenger: Messenger[LocationMessage]) extends Actor with LazyLogging{
+case class CelltowerSupervisor(mcc: Int, mnc: Int, messenger: Messenger[LocationMessage]) extends Actor with LazyLogging {
 
-    override def receive: Receive =  {
+    override def receive: Receive = {
         case vl: VehicleLocationMessage =>
-            val cct = CelltowerDatabase.findClosestCelltower(mcc, mnc, vl.position)
-            logger.debug(s"closest celltower: $cct")
-            messenger.send(cct)
+            val ctd = CelltowerDatabase.nearestCelltower(mcc, mnc, vl.position)
+            logger.debug(s"closest celltower: $ctd")
+            messenger.send(CelltowerLocationMessage(vl.id, ctd.dist, ctd.celltower))
     }
 }
 

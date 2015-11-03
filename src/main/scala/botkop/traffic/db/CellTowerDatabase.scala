@@ -2,8 +2,9 @@ package botkop.traffic.db
 
 import java.io.File
 import java.sql.DriverManager
+
+import botkop.traffic.{CelltowerDistance, Celltower}
 import botkop.traffic.geo.LatLng
-import botkop.traffic.messaging.CelltowerLocationMessage
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
 
@@ -18,36 +19,54 @@ object CelltowerDatabase extends Serializable with LazyLogging {
 
     Class.forName("org.sqlite.JDBC")
 
-    def findAllCelltowersForNetwork(mcc: Int, mnc: Int): ListBuffer[(Int, Int, LatLng)] = {
+    def allNetworkCelltowers(mcc: Int, mnc: Int): ListBuffer[Celltower] = {
 
-        val list = new ListBuffer[(Int, Int, LatLng)]
+        val list = new ListBuffer[Celltower]
 
         val connection = DriverManager.getConnection(url)
         val stmt = connection.createStatement()
         val rs = stmt.executeQuery(s"select area, cell, lat, lon from cell_towers where mcc = '$mcc' and net = '$mnc'")
         while(rs.next()) {
-            list.append((rs.getInt(1), rs.getInt(2), LatLng(rs.getDouble(3), rs.getDouble(4))))
+            list.append(Celltower(rs.getInt(1), rs.getInt(2), LatLng(rs.getDouble(3), rs.getDouble(4))))
         }
         rs.close()
         stmt.close()
         connection.close()
 
         list
+
     }
 
-    def findClosestCelltower(mcc: Int, mnc: Int, location: LatLng): CelltowerLocationMessage = {
+    def nearestCelltower(mcc: Int, mnc: Int, location: LatLng): CelltowerDistance = {
 
-        var min = CelltowerLocationMessage(0, 0, Double.MaxValue, LatLng(0.0, 0.0))
+        var min = CelltowerDistance(Celltower(), Double.MaxValue)
 
-        findAllCelltowersForNetwork(mcc, mnc).foreach {
-            case (area, cell, towerLocation) =>
-                val dist = location.distanceFrom(towerLocation)
+        allNetworkCelltowers(mcc, mnc).foreach {
+            case ct: Celltower =>
+                val dist = location.distanceFrom(ct.position)
                 if (dist < min.dist) {
-                    min = CelltowerLocationMessage(area, cell, dist, towerLocation)
+                    min = CelltowerDistance(ct, dist)
                 }
         }
-
         min
+    }
+
+    def randomCelltowers(mcc: Int, mnc: Int, count: Int): ListBuffer[Celltower] = {
+        val list = new ListBuffer[Celltower]
+
+        val connection = DriverManager.getConnection(url)
+        val stmt = connection.createStatement()
+        val rs = stmt.executeQuery(
+            s"select area, cell, lat, lon from cell_towers where mcc = '$mcc' and net = '$mnc' " +
+                s"order by random() limit($count)")
+        while(rs.next()) {
+            list.append(Celltower(rs.getInt(1), rs.getInt(2), LatLng(rs.getDouble(3), rs.getDouble(4))))
+        }
+        rs.close()
+        stmt.close()
+        connection.close()
+
+        list
     }
 
 }
