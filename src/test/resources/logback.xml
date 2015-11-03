@@ -1,0 +1,15 @@
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>[%level] [%date{ISO8601}] [%logger]: %msg%n</pattern>
+            <!-- %X{akkaSource} -->
+        </encoder>
+    </appender>
+
+    <!-- Change to debug to see data pathway logging. -->
+    <logger name="botkop" level="DEBUG" />
+
+    <root level="info">
+        <appender-ref ref="STDOUT"/>
+    </root>
+</configuration>

@@ -38,7 +38,7 @@ object Route extends LazyLogging {
 
             case Right(json) =>
                 val JString(polyline) = json \\ "overview_polyline" \ "points"
-                logger.info(polyline)
+                logger.debug(polyline)
                 Some(Route(polyline))
 
             case Left(err) =>
@@ -50,9 +50,8 @@ object Route extends LazyLogging {
     def apply (str: String): Route = {
         require(str.length > 0, "the polyline must be non-empty")
         val polyline = Polyline(str)
-        new Route(polyline)
+        Route(polyline)
     }
 
 }
-
 

@@ -1,16 +1,16 @@
 package botkop.traffic
 
 import akka.actor.{PoisonPill, Props, ActorSystem}
+import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
 
 object Simulator extends App with LazyLogging {
 
-    logger.info("hello")
+    val conf = ConfigFactory.load()
 
-    val system = ActorSystem("SimulatorSystem")
-    val myActor = system.actorOf(Props[Vehicle], name = "vehicle1")
+    val mcc = args(0)
+    val mnc = args(1)
 
-    system.awaitTermination()
 
 
 

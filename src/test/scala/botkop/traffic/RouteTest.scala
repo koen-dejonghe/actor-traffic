@@ -21,6 +21,7 @@ class RouteTest extends FlatSpec with Matchers with LazyLogging {
         val to = LatLng(63.96103710000001, -21.2614058)
 
         Route.byGoogle(apiKey, from, to) match {
+
             case Some(route) =>
                 val d = route.distance
                 logger.info(s"distance = $d")

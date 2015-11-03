@@ -4,6 +4,7 @@ import java.util.UUID
 
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit}
+import botkop.traffic.messaging.{MockLocationMessenger, VehicleLocationMessage}
 import com.typesafe.scalalogging.LazyLogging
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
@@ -16,8 +17,7 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
     def this() = this(ActorSystem("VehicleTest"))
 
-    // val messenger = VehicleLocationMessenger()
-    val sender = new MockMessenger(self)
+    val sender = new MockLocationMessenger(self)
 
     override def afterAll() {
         TestKit.shutdownActorSystem(system)
@@ -33,7 +33,7 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
             val vehicle = system.actorOf(Vehicle.props(id, sender, velocity, 500.milliseconds), name = "vehicle1")
             vehicle ! route
 
-            val seq: Seq[VehicleLocation] = receiveN(6, 3.seconds).asInstanceOf[Seq[VehicleLocation]]
+            val seq: Seq[VehicleLocationMessage] = receiveN(6, 3.seconds).asInstanceOf[Seq[VehicleLocationMessage]]
             logger.info(seq.toString())
             val distance = seq.head.position.distanceFrom(seq(5).position)
             distance should be (83.0 +- 0.9)
