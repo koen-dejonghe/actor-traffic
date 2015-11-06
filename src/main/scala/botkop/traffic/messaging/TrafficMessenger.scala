@@ -10,12 +10,12 @@ import net.liftweb.json.Serialization.write
 /*
 send vehicle location both to kafka and to an actor
  */
-case class LocationMessenger(
+case class TrafficMessenger(
     brokerList: String = "localhost:9092",
     clientId: String = UUID.randomUUID().toString,
     topic: String,
     locationCollector: ActorRef
-)  extends Messenger[LocationMessage] {
+)  extends Messenger[TrafficMessage] {
 
     val props = new Properties()
     props.put("metadata.broker.list", brokerList)
@@ -24,11 +24,11 @@ case class LocationMessenger(
 
     val producer = new Producer[String, String](new ProducerConfig(props))
 
-    override def send(vl: LocationMessage): Unit = {
+    override def send(vl: TrafficMessage): Unit = {
         send(null, vl)
     }
 
-    override def send(key: String, vl: LocationMessage): Unit = {
+    override def send(key: String, vl: TrafficMessage): Unit = {
         implicit val formats = DefaultFormats
         val json: String = write(vl)
         val data =
