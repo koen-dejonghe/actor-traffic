@@ -30,7 +30,7 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
         "trace a Vehicle along the route" in {
 
             def producer = new VehicleTestProducer(conf, self)
-            val supervisor = system.actorOf(TrafficSupervisor.props(206, 10, producer), name = "test-supervisor")
+            val supervisor = system.actorOf(TrafficSupervisor.props(206, 10, producer), name = "vehicle-supervisor")
 
             val velocity = 10000.0
             val id = UUID.randomUUID().toString

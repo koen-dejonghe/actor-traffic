@@ -11,7 +11,7 @@ import com.typesafe.scalalogging.LazyLogging
 import scala.collection.mutable.ListBuffer
 
 
-object CelltowerDatabase extends Serializable with LazyLogging {
+case class CelltowerDatabase(mcc: Int, mnc: Int) extends Serializable with LazyLogging {
 
     val conf = ConfigFactory.parseFile(new File("conf/application.conf"))
     val dbFile = conf.getString("traffic.sqlite.db.file")
@@ -19,7 +19,7 @@ object CelltowerDatabase extends Serializable with LazyLogging {
 
     Class.forName("org.sqlite.JDBC")
 
-    def allNetworkCelltowers(mcc: Int, mnc: Int): ListBuffer[Celltower] = {
+    val allNetworkCelltowers: List[Celltower] = {
 
         val list = new ListBuffer[Celltower]
 
@@ -33,15 +33,15 @@ object CelltowerDatabase extends Serializable with LazyLogging {
         stmt.close()
         connection.close()
 
-        list
+        list.toList
 
     }
 
-    def nearestCelltower(mcc: Int, mnc: Int, location: LatLng): CelltowerDistance = {
+    def nearestCelltower(location: LatLng): CelltowerDistance = {
 
         var min = CelltowerDistance(Celltower(), Double.MaxValue)
 
-        allNetworkCelltowers(mcc, mnc).foreach {
+        allNetworkCelltowers.foreach {
             case ct: Celltower =>
                 val dist = location.distanceFrom(ct.position)
                 if (dist < min.dist) {
@@ -51,7 +51,7 @@ object CelltowerDatabase extends Serializable with LazyLogging {
         min
     }
 
-    def randomCelltowers(mcc: Int, mnc: Int, count: Int): ListBuffer[Celltower] = {
+    def randomCelltowers(count: Int): List[Celltower] = {
         val list = new ListBuffer[Celltower]
 
         val connection = DriverManager.getConnection(url)
@@ -66,7 +66,7 @@ object CelltowerDatabase extends Serializable with LazyLogging {
         stmt.close()
         connection.close()
 
-        list
+        list.toList
     }
 
 }

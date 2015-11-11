@@ -13,11 +13,13 @@ class TrafficSupervisor(mcc: Int,
                         kafkaProducer: Producer[String, String])
     extends Actor with LazyLogging {
 
+    val ctdb = CelltowerDatabase(mcc, mnc)
+
     override def receive: Receive = {
         case vlm: VehicleLocationMessage =>
             send("vehicle-location-topic", vlm)
 
-            val nct = CelltowerDatabase.nearestCelltower(mcc, mnc, vlm.position)
+            val nct = ctdb.nearestCelltower(vlm.position)
             logger.debug(s"nearest celltower: $nct")
             send("celltower-location-topic", CelltowerLocationMessage(vlm.id, nct.dist, nct.celltower))
 

@@ -30,9 +30,11 @@ object Simulator extends App with LazyLogging {
     props.put("serializer.class", "kafka.serializer.StringEncoder")
     val producer = new Producer[String, String](new ProducerConfig(props))
 
+    val ctdb = CelltowerDatabase(mcc, mnc)
+
 
     // get 2 random celltowers
-    val fromTo = CelltowerDatabase.randomCelltowers(mcc, mnc, 2)
+    val fromTo = ctdb.randomCelltowers(2)
 
     // get route between the 2 celltowers
     val route = Route.byGoogle(googleAppsApiKey, fromTo.head.position, fromTo(1).position).get
@@ -50,11 +52,10 @@ object Simulator extends App with LazyLogging {
     vehicle ! route
 }
 
-
 class WatchActor(who: ActorRef) extends Actor {
     context.watch(who)
     def receive = {
-        case Terminated(who) => context.system.shutdown()
+        case Terminated(`who`) => context.system.shutdown()
     }
 }
 
