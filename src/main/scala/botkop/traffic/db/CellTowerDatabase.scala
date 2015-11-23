@@ -1,6 +1,6 @@
 package botkop.traffic.db
 
-import java.io.File
+import java.io.{Closeable, File}
 import java.sql.DriverManager
 
 import botkop.traffic.{CelltowerDistance, Celltower}
@@ -11,30 +11,22 @@ import com.typesafe.scalalogging.LazyLogging
 import scala.collection.mutable.ListBuffer
 
 
-case class CelltowerDatabase(mcc: Int, mnc: Int) extends Serializable with LazyLogging {
-
-    val conf = ConfigFactory.parseFile(new File("conf/application.conf"))
-    val dbFile = conf.getString("traffic.sqlite.db.file")
-    val url = s"jdbc:sqlite:$dbFile"
+case class CelltowerDatabase(mcc: Int, mnc: Int) extends Closeable with Serializable with LazyLogging {
 
     Class.forName("org.sqlite.JDBC")
 
-    val allNetworkCelltowers: List[Celltower] = {
+    lazy val connection = {
+        val conf = ConfigFactory.parseFile(new File("conf/application.conf"))
+        val dbFile = conf.getString("traffic.sqlite.db.file")
+        val url = s"jdbc:sqlite:$dbFile"
+        DriverManager.getConnection(url)
+    }
 
-        val list = new ListBuffer[Celltower]
-
-        val connection = DriverManager.getConnection(url)
-        val stmt = connection.createStatement()
-        val rs = stmt.executeQuery(s"select area, cell, lat, lon from cell_towers where mcc = '$mcc' and net = '$mnc'")
-        while(rs.next()) {
-            list.append(Celltower(rs.getInt(1), rs.getInt(2), LatLng(rs.getDouble(3), rs.getDouble(4))))
-        }
-        rs.close()
-        stmt.close()
-        connection.close()
-
-        list.toList
-
+    def allNetworkCelltowers = new Iterator[Celltower] {
+        val qry = s"select area, cell, lat, lon from cell_towers where mcc = '$mcc' and net = '$mnc'"
+        val rs = connection.createStatement().executeQuery(qry)
+        def hasNext = rs.next()
+        def next() = Celltower(rs.getInt(1), rs.getInt(2), LatLng(rs.getDouble(3), rs.getDouble(4)))
     }
 
     def nearestCelltower(location: LatLng): CelltowerDistance = {
@@ -54,19 +46,17 @@ case class CelltowerDatabase(mcc: Int, mnc: Int) extends Serializable with LazyL
     def randomCelltowers(count: Int): List[Celltower] = {
         val list = new ListBuffer[Celltower]
 
-        val connection = DriverManager.getConnection(url)
         val stmt = connection.createStatement()
-        val rs = stmt.executeQuery(
-            s"select area, cell, lat, lon from cell_towers where mcc = '$mcc' and net = '$mnc' " +
-                s"order by random() limit($count)")
+        val qry = s"select area, cell, lat, lon from cell_towers where mcc = '$mcc' and net = '$mnc' order by random() limit($count)"
+        val rs = stmt.executeQuery(qry)
         while(rs.next()) {
             list.append(Celltower(rs.getInt(1), rs.getInt(2), LatLng(rs.getDouble(3), rs.getDouble(4))))
         }
         rs.close()
         stmt.close()
-        connection.close()
 
         list.toList
     }
 
+    override def close(): Unit = if (connection != null) connection.close()
 }
