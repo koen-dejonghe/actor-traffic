@@ -11,7 +11,6 @@ import kafka.producer.{Producer, ProducerConfig}
 
 import scala.concurrent.duration._
 
-
 object Simulator extends App with LazyLogging {
 
     val conf = ConfigFactory.parseFile(new File("conf/application.conf"))
@@ -20,7 +19,6 @@ object Simulator extends App with LazyLogging {
     val mnc = args(1).toInt
     val googleAppsApiKey = conf.getString("google.api.key")
     val system = ActorSystem("NetworkTrafficSimulator")
-
 
     val brokerList: String = "localhost:9092"
     val clientId: String = UUID.randomUUID().toString
@@ -32,7 +30,6 @@ object Simulator extends App with LazyLogging {
 
     val ctdb = CelltowerDatabase(mcc, mnc)
 
-
     // get 2 random celltowers
     val fromTo = ctdb.randomCelltowers(2)
 
@@ -40,22 +37,24 @@ object Simulator extends App with LazyLogging {
     val route = Route.byGoogle(googleAppsApiKey, fromTo.head.position, fromTo(1).position).get
 
     // create a vehicle
-    val velocity = 100000.0
+    val velocity = 10000.0 // 10000 kmh
     val id = UUID.randomUUID().toString
 
     val supervisor = system.actorOf(TrafficSupervisor.props(mcc, mnc, producer))
     val vehicle = system.actorOf(VehicleActor.props(id, supervisor, velocity, 250.milliseconds), name = s"vehicle-$id")
 
-    val watcher = system.actorOf(Props(new WatchActor(vehicle)), name = "watcher")
+    val watcher = system.actorOf(Props(new WatchActor(vehicle, ctdb.close())), name = "watcher")
 
     // start the journey
     vehicle ! route
 }
 
-class WatchActor(who: ActorRef) extends Actor {
+class WatchActor(who: ActorRef, stop: => Unit) extends Actor {
     context.watch(who)
     def receive = {
-        case Terminated(`who`) => context.system.shutdown()
+        case Terminated(`who`) =>
+            stop
+            context.system.shutdown()
     }
 }
 

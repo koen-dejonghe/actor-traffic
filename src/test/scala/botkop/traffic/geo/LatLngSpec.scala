@@ -2,7 +2,7 @@ package botkop.traffic.geo
 
 import org.scalatest.{Matchers, FlatSpec}
 
-class LatLngTest extends FlatSpec with Matchers {
+class LatLngSpec extends FlatSpec with Matchers {
 
     "A LatLng" should "calculate the distance" in {
         val from = LatLng(38.898556, -77.037852)

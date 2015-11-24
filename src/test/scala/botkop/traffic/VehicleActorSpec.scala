@@ -12,12 +12,10 @@ import scala.collection.immutable.Seq
 import scala.concurrent.duration._
 
 
-class VehicleActorTest(_system: ActorSystem) extends TestKit(_system) with ImplicitSender
+class VehicleActorSpec(_system: ActorSystem) extends TestKit(_system) with ImplicitSender
 with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
-    def this() = this(ActorSystem("VehicleActorTest"))
-
-    // val sender = new MockLocationMessenger(self)
+    def this() = this(ActorSystem("VehicleActorSpec"))
 
     override def afterAll() {
         TestKit.shutdownActorSystem(system)
@@ -28,16 +26,15 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
         "respond with locations along the route" in {
 
             val route = Route("_p~iF~ps|U_ulLnnqC_mqNvxq`@")
-            val velocity = 120000.0 / 3600.0 // 120 kmh
+            val velocity = 120.0 // 120 kmh
             val id = UUID.randomUUID().toString
             val vehicle = system.actorOf(VehicleActor.props(id, self, velocity, 500.milliseconds), name = "vehicle1")
-            // val vehicle = system.actorOf(VehicleActor.props(id, sender, velocity, 500.milliseconds), name = "vehicle1")
             vehicle ! route
 
             val seq: Seq[VehicleLocationMessage] = receiveN(6, 3.seconds).asInstanceOf[Seq[VehicleLocationMessage]]
             logger.info(seq.toString())
             val distance = seq.head.position.distanceFrom(seq(5).position)
-            distance should be (83.0 +- 0.9)
+            distance should be (83.3 +- 0.19) // +- 83.3 metres in 2.5 seconds
 
         }
     }

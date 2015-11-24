@@ -2,7 +2,7 @@ package botkop.traffic.geo
 
 import org.scalatest.{FlatSpec, Matchers}
 
-class PolylineTest extends FlatSpec with Matchers {
+class PolylineSpec extends FlatSpec with Matchers {
 
     val example = List(LatLng(38.5, -120.2), LatLng(40.7, -120.95), LatLng(43.252, -126.453))
 

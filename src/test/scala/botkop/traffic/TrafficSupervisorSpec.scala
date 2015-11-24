@@ -32,10 +32,10 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
             def producer = new VehicleTestProducer(conf, self)
             val supervisor = system.actorOf(TrafficSupervisor.props(206, 10, producer), name = "vehicle-supervisor")
 
-            val velocity = 10000.0
+            val velocity = 1000.0 // 1000 km/h
             val id = UUID.randomUUID().toString
 
-            val vehicle = system.actorOf(VehicleActor.props(id, supervisor, velocity, 250.milliseconds), name = id)
+            val vehicle = system.actorOf(VehicleActor.props(id, supervisor, velocity, 100.milliseconds), name = id)
             vehicle ! route
 
             val seq: Seq[VehicleLocationMessage] = receiveN(6, 2.seconds).asInstanceOf[Seq[VehicleLocationMessage]]
@@ -44,8 +44,8 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
             vehicle ! PoisonPill
 
-            dest.position.lat should be (51.263398177792666)
-            dest.position.lng should be (3.797454774396019)
+            dest.position.lat should be (51.316133207703544)
+            dest.position.lng should be (3.8466076302348013)
 
         }
 
@@ -54,10 +54,10 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
             def producer = new CelltowerTestProducer(conf, self)
             val supervisor = system.actorOf(TrafficSupervisor.props(206, 10, producer), name = "celltower-supervisor")
 
-            val velocity = 10000.0
+            val velocity = 100000.0 // 1000 km/h
             val id = UUID.randomUUID().toString
 
-            val vehicle = system.actorOf(VehicleActor.props(id, supervisor, velocity, 250.milliseconds), name = id)
+            val vehicle = system.actorOf(VehicleActor.props(id, supervisor, velocity, 100.milliseconds), name = id)
             vehicle ! route
 
             val seq: Seq[CelltowerLocationMessage] = receiveN(6, 2.seconds).asInstanceOf[Seq[CelltowerLocationMessage]]
@@ -66,8 +66,8 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
             vehicle ! PoisonPill
 
-            dest.celltower.area should be (1007)
-            dest.celltower.cell should be (79)
+            dest.celltower.area should be (14300)
+            dest.celltower.cell should be (8821)
 
         }
     }

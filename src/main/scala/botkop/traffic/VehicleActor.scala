@@ -10,11 +10,17 @@ import scala.concurrent.duration._
 
 class VehicleActor(id: String,
               supervisor: ActorRef,
-              velocity: Double,
+              velocity: Double, // in km/h
               duration: FiniteDuration = 1.second)
     extends Actor with LazyLogging {
 
     var route: Route = _
+
+    // convert from km/h to m/s
+    def toMetersPerSecond(velocity: Double) = velocity * 1000.0 / 3600.0
+
+    val slideSize: Double = duration.toUnit(SECONDS)
+    val distanceMovedInSlide: Double = toMetersPerSecond(velocity) * slideSize
 
     override def receive = {
 
@@ -37,7 +43,8 @@ class VehicleActor(id: String,
                 supervisor ! vl
                 logger.debug(s"distance covered: $currentDistance")
 
-                val newDistance: Double = currentDistance + (velocity * (duration.toMillis / 1000.0))
+                // note: must use division by float to avoid rounding
+                val newDistance: Double = currentDistance + distanceMovedInSlide
                 context.system.scheduler.scheduleOnce(duration, self, newDistance)
             }
 

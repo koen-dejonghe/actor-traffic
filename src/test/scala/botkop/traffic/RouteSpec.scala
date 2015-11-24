@@ -9,7 +9,7 @@ import org.scalatest.{Ignore, Matchers, FlatSpec}
 ignore this test to avoid access to google all the time
  */
 // @Ignore
-class RouteTest extends FlatSpec with Matchers with LazyLogging {
+class RouteSpec extends FlatSpec with Matchers with LazyLogging {
 
     "A Route" should "get the directions from Google" in {
 

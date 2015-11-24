@@ -58,5 +58,10 @@ case class CelltowerDatabase(mcc: Int, mnc: Int) extends Closeable with Serializ
         list.toList
     }
 
-    override def close(): Unit = if (connection != null) connection.close()
+    override def close(): Unit = {
+        if (connection != null) {
+            logger.debug("closing database")
+            connection.close()
+        }
+    }
 }

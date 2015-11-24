@@ -1,4 +1,5 @@
 
+
 val logging = "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0"
 val logback = "ch.qos.logback" % "logback-classic" % "1.1.3"
 val actor = "com.typesafe.akka" %% "akka-actor" % "2.3.14"
@@ -14,6 +15,10 @@ val commonsPool = "org.apache.commons" % "commons-pool2" % "2.3"
 
 val scalaTest = "org.scalatest" % "scalatest_2.11" % "2.2.4" % "test"
 val akkaTestKit = "com.typesafe.akka" % "akka-testkit_2.11" % "2.4.0" % "test"
+
+val sprayCan = "io.spray" % "spray-can_2.11" % "1.3.3"
+val sprayRouting =  "io.spray" % "spray-routing_2.11" % "1.3.3"
+val sprayTestKit = "io.spray" % "spray-testkit_2.11" % "1.3.3"
 
 lazy val commonSettings = Seq(
     organization := "botkop",
@@ -31,5 +36,7 @@ lazy val root = (project in file(".")).
             typesafeConfig,
             kafka,
             slick, sqlite, commonsPool,
-            scalaTest, akkaTestKit)
+            scalaTest, akkaTestKit,
+            sprayCan, sprayRouting, sprayTestKit
+        )
     )
