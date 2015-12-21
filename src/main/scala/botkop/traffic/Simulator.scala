@@ -41,7 +41,7 @@ object Simulator extends App with LazyLogging {
     val id = UUID.randomUUID().toString
 
     val supervisor = system.actorOf(TrafficSupervisor.props(mcc, mnc, producer))
-    val vehicle = system.actorOf(VehicleActor.props(id, supervisor, velocity, 250.milliseconds), name = s"vehicle-$id")
+    val vehicle = system.actorOf(SubscriberActor.props(id, supervisor, velocity, 250.milliseconds), name = s"vehicle-$id")
 
     val watcher = system.actorOf(Props(new WatchActor(vehicle, ctdb.close())), name = "watcher")
 

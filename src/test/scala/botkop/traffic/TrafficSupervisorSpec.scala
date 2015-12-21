@@ -4,7 +4,7 @@ import java.util.{Properties, UUID}
 
 import akka.actor._
 import akka.testkit.{ImplicitSender, TestKit}
-import botkop.traffic.messaging.{VehicleLocationMessage, CelltowerLocationMessage}
+import botkop.traffic.messaging.{SubscriberLocationMessage, CelltowerLocationMessage}
 import com.typesafe.scalalogging.LazyLogging
 import kafka.producer.{KeyedMessage, ProducerConfig, Producer}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
@@ -29,16 +29,16 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
         "trace a Vehicle along the route" in {
 
-            def producer = new VehicleTestProducer(conf, self)
+            def producer = new SubscriberTestProducer(conf, self)
             val supervisor = system.actorOf(TrafficSupervisor.props(206, 10, producer), name = "vehicle-supervisor")
 
             val velocity = 1000.0 // 1000 km/h
             val id = UUID.randomUUID().toString
 
-            val vehicle = system.actorOf(VehicleActor.props(id, supervisor, velocity, 100.milliseconds), name = id)
+            val vehicle = system.actorOf(SubscriberActor.props(id, supervisor, velocity, 100.milliseconds), name = id)
             vehicle ! route
 
-            val seq: Seq[VehicleLocationMessage] = receiveN(6, 2.seconds).asInstanceOf[Seq[VehicleLocationMessage]]
+            val seq: Seq[SubscriberLocationMessage] = receiveN(6, 2.seconds).asInstanceOf[Seq[SubscriberLocationMessage]]
             logger.info(seq.toString())
             val dest = seq(5)
 
@@ -57,7 +57,7 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
             val velocity = 100000.0 // 1000 km/h
             val id = UUID.randomUUID().toString
 
-            val vehicle = system.actorOf(VehicleActor.props(id, supervisor, velocity, 100.milliseconds), name = id)
+            val vehicle = system.actorOf(SubscriberActor.props(id, supervisor, velocity, 100.milliseconds), name = id)
             vehicle ! route
 
             val seq: Seq[CelltowerLocationMessage] = receiveN(6, 2.seconds).asInstanceOf[Seq[CelltowerLocationMessage]]
@@ -73,7 +73,7 @@ with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
     }
 }
 
-class VehicleTestProducer(conf: ProducerConfig, supervisor: ActorRef) extends Producer[String, String](conf) {
+class SubscriberTestProducer(conf: ProducerConfig, supervisor: ActorRef) extends Producer[String, String](conf) {
 
     implicit val formats = DefaultFormats
 
@@ -82,8 +82,8 @@ class VehicleTestProducer(conf: ProducerConfig, supervisor: ActorRef) extends Pr
         messages.foreach { msg =>
             val json = parse(msg.message)
             msg.topic match {
-                case "vehicle-location-topic" =>
-                    val vlm = json.extract[VehicleLocationMessage]
+                case "subscriber-location-topic" =>
+                    val vlm = json.extract[SubscriberLocationMessage]
                     supervisor ! vlm
                 case _ =>
             }

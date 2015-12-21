@@ -8,10 +8,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
 
-class VehicleActor(id: String,
-              supervisor: ActorRef,
-              velocity: Double, // in km/h
-              duration: FiniteDuration = 1.second)
+class SubscriberActor(id: String,
+                      supervisor: ActorRef,
+                      velocity: Double, // in km/h
+                      duration: FiniteDuration = 1.second)
     extends Actor with LazyLogging {
 
     var route: Route = _
@@ -31,15 +31,15 @@ class VehicleActor(id: String,
         case currentDistance: Double =>
             // end reached ?
             if (currentDistance >= route.distance){
-                val vl = VehicleLocationMessage(id, route.to)
+                val vl = SubscriberLocationMessage(id, route.to)
                 supervisor ! vl
                 logger.debug(s"route end reached: ${route.distance}")
-                supervisor ! VehicleDoneMessage(id)
+                supervisor ! SubscriberDoneMessage(id)
                 self ! PoisonPill
             }
             else {
                 val position = route.position(currentDistance)
-                val vl = VehicleLocationMessage(id, position)
+                val vl = SubscriberLocationMessage(id, position)
                 supervisor ! vl
                 logger.debug(s"distance covered: $currentDistance")
 
@@ -53,12 +53,12 @@ class VehicleActor(id: String,
 
 }
 
-object VehicleActor {
+object SubscriberActor {
     def props(
              id: String,
              supervisor: ActorRef,
              velocity: Double,
              duration: FiniteDuration = 1.second): Props =
-        Props(new VehicleActor(id, supervisor, velocity, duration))
+        Props(new SubscriberActor(id, supervisor, velocity, duration))
 }
 
